@@ -19,8 +19,10 @@ class MemoryFriendlyLoader(torch.utils.data.Dataset):
 
         for root, dirs, names in os.walk(self.low_img_dir):
             for name in names:
-                self.train_low_data_names.append(os.path.join(root, name))
+                if not name.endswith("db"):
+                    self.train_low_data_names.append(os.path.join(root, name))
 
+        self.train_low_data_names = self.train_low_data_names[:500]
         self.train_low_data_names.sort()
         self.count = len(self.train_low_data_names)
 
@@ -48,14 +50,15 @@ class MemoryFriendlyLoader(torch.utils.data.Dataset):
         #     low = low[h_offset:h_offset + batch_h, w_offset:w_offset + batch_w]
 
         low = np.asarray(low, dtype=np.float32)
+        # h,w,c -> c,h,w
         low = np.transpose(low[:, :, :], (2, 0, 1))
 
-        img_name = self.train_low_data_names[index].split('\\')[-1]
+        img_name = self.train_low_data_names[index].split('/')[-1]
         # if self.task == 'test':
         #     # img_name = self.train_low_data_names[index].split('\\')[-1]
         #     return torch.from_numpy(low), img_name
 
-        return torch.from_numpy(low), img_name
+        return torch.from_numpy(low).cuda(), img_name
 
     def __len__(self):
         return self.count

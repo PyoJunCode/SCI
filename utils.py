@@ -6,6 +6,8 @@ from torch.nn.modules.container import T
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 
+from PIL import Image
+
 
 class AvgrageMeter(object):
 
@@ -127,3 +129,9 @@ def create_exp_dir(path, scripts_to_save=None):
       dst_file = os.path.join(path, 'scripts', os.path.basename(script))
       shutil.copyfile(script, dst_file)
 
+def save_images(tensor, path):
+
+    image_numpy = tensor[0].cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0)))
+    im = Image.fromarray(np.clip(image_numpy * 255.0, 0, 255.0).astype('uint8'))
+    im.save(path, 'png')

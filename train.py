@@ -25,7 +25,7 @@ parser.add_argument('--seed', type=int, default=2, help='random seed')
 parser.add_argument('--epochs', type=int, default=1000, help='epochs')
 parser.add_argument('--lr', type=float, default=0.0003, help='learning rate')
 parser.add_argument('--stage', type=int, default=3, help='epochs')
-parser.add_argument('--save', type=str, default='EXP/', help='location of the data corpus')
+parser.add_argument('--save', type=str, default='EXP', help='location of the data corpus')
 
 args = parser.parse_args()
 
@@ -95,20 +95,20 @@ def main():
     print(MB)
 
 
-    train_low_data_names = 'Your train dataset'
+    train_low_data_names = "/mnt/nas/open_data/Low_Light_Enhancement_RGB/DarkFace_Train_2021/image"
     TrainDataset = MemoryFriendlyLoader(img_dir=train_low_data_names, task='train')
 
 
-    test_low_data_names = './data/medium'
+    test_low_data_names = '/mnt/nas/sjp/valid'
     TestDataset = MemoryFriendlyLoader(img_dir=test_low_data_names, task='test')
 
     train_queue = torch.utils.data.DataLoader(
         TrainDataset, batch_size=args.batch_size,
-        pin_memory=True, num_workers=0, shuffle=True)
+        num_workers=0, shuffle=True, generator=torch.Generator(device="cuda"))
 
     test_queue = torch.utils.data.DataLoader(
         TestDataset, batch_size=1,
-        pin_memory=True, num_workers=0, shuffle=True)
+        num_workers=0, shuffle=True, generator=torch.Generator(device="cuda"))
 
     total_step = 0
 
@@ -133,7 +133,7 @@ def main():
         logging.info('train-epoch %03d %f', epoch, np.average(losses))
         utils.save(model, os.path.join(model_path, 'weights_%d.pt' % epoch))
 
-        if epoch % 1 == 0 and total_step != 0:
+        if epoch % 100 == 0 and total_step != 0:
             logging.info('train %03d %f', epoch, loss)
             model.eval()
             with torch.no_grad():
@@ -142,7 +142,7 @@ def main():
                     image_name = image_name[0].split('\\')[-1].split('.')[0]
                     illu_list, ref_list, input_list, atten= model(input)
                     u_name = '%s.png' % (image_name + '_' + str(epoch))
-                    u_path = image_path + '/' + u_name
+                    u_path = os.path.join(image_path, u_name)
                     save_images(ref_list[0], u_path)
 
 if __name__ == '__main__':
